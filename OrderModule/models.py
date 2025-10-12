@@ -68,4 +68,4 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField(default=1)
 
     class Meta:
-        unique_together = ('order', 'product')  # No duplicate product per order
+        unique_together = ('order', 'product')

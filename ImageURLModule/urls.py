@@ -3,5 +3,4 @@ from .views import ImageUploadView
 
 urlpatterns = [
     path('', ImageUploadView.as_view(), name='image-upload'),
-    # other paths
 ]

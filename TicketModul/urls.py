@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import TicketView
+from .views import TicketAPIView
 
 urlpatterns = [
-    path('', TicketView.as_view(), name='ticket-api'),
+    path('', TicketAPIView.as_view(), name='ticket-api'),
 ]

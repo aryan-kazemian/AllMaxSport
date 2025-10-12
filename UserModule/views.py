@@ -1,109 +1,49 @@
-# views.py
-from django.contrib.auth.hashers import make_password, check_password
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
-from UserModule.models import User
-from UserModule.serializers import UserSerializer
+from django.contrib.auth import logout as django_logout, get_user_model
+from rest_framework import generics, permissions
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
+from .serializers import UserSerializer, LoginSerializer, RegisterSerializer
+from django.contrib.auth import login as django_login
 
-@csrf_exempt
-def user_api(request):
-    if request.method == 'GET':
-        if request.GET.get('get_active_users_count') == 'true':
-            active_users_count = User.objects.filter(is_active=True).count()
-            return JsonResponse({'active_users_count': active_users_count})
-
-        user_id = request.GET.get('id')
-        phone = request.GET.get('phone')
-        user_type = request.GET.get('user_type')
-        first_name = request.GET.get('first_name')
-        last_name = request.GET.get('last_name')
-        email = request.GET.get('email')
-
-        filters = {}
-        if user_id:
-            filters['id'] = user_id
-        if phone:
-            filters['phone'] = phone
-        if user_type:
-            filters['user_type'] = user_type
-        if first_name:
-            filters['first_name__icontains'] = first_name
-        if last_name:
-            filters['last_name__icontains'] = last_name
-        if email:
-            filters['email__icontains'] = email
-
-        users = User.objects.filter(**filters)
-        if not users.exists():
-            return JsonResponse({'message': 'No user found with the given criteria'}, status=404)
-
-        serializer = UserSerializer(users, many=True)
-        return JsonResponse(serializer.data, safe=False)
+User = get_user_model()
 
 
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        if data.get('action') == 'login':
-            email = data.get('email')
-            username = data.get('username')
-            password = data.get('password')
-
-            try:
-                if email:
-                    user = User.objects.get(email=email)
-                elif username:
-                    user = User.objects.get(username=username)
-                else:
-                    return JsonResponse({'message': 'Email or username is required'}, status=400)
-
-                if check_password(password, user.password):
-                    serializer = UserSerializer(user)
-                    return JsonResponse(serializer.data, safe=False)
-                else:
-                    return JsonResponse({'message': 'Incorrect password'}, status=401)
-            except User.DoesNotExist:
-                return JsonResponse({'message': 'User not found'}, status=404)
-        else:
-            if 'password' in data:
-                data['password'] = make_password(data['password'])
-            serializer = UserSerializer(data=data)
-            if serializer.is_valid():
-                serializer.save()
-                return JsonResponse(serializer.data, status=201)
-            return JsonResponse(serializer.errors, status=400)
+class RegisterView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    permission_classes = [permissions.AllowAny]
+    serializer_class = RegisterSerializer
 
 
-    elif request.method == 'PATCH':
-        user_id = request.GET.get('id')
-        if not user_id:
-            return JsonResponse({'message': 'id is required in query'}, status=400)
+class LoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+    permission_classes = [permissions.AllowAny]
 
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return JsonResponse({'message': 'User not found'}, status=404)
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data
 
-        data = JSONParser().parse(request)
-        if 'password' in data:
-            data['password'] = make_password(data['password'])
+        django_login(request, user)
 
-        serializer = UserSerializer(user, data=data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data)
-        return JsonResponse(serializer.errors, status=400)
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "user": UserSerializer(user).data,
+            "access": str(refresh.access_token),
+            "refresh": str(refresh)
+        })
 
-    elif request.method == 'DELETE':
-        user_id = request.GET.get('id')
-        if not user_id:
-            return JsonResponse({'message': 'id is required in query'}, status=400)
 
-        try:
-            user = User.objects.get(id=user_id)
-            user.delete()
-            return JsonResponse({'message': 'User deleted successfully'})
-        except User.DoesNotExist:
-            return JsonResponse({'message': 'User not found'}, status=404)
+class LogoutView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-    return JsonResponse({'message': 'Method not allowed'}, status=405)
+    def post(self, request):
+        django_logout(request)
+        return Response({"detail": "Successfully logged out from Django session and JWT client-side."})
+
+
+class CurrentUserView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        return Response(UserSerializer(request.user).data)

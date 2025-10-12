@@ -34,8 +34,6 @@ class Product(models.Model):
     sales = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    # Relationships
     features = models.JSONField(default=list)
     images = models.JSONField(default=list)
 

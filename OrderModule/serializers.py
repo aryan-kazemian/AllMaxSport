@@ -5,7 +5,7 @@ from ProductModule.models import Product
 class DiscountCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = DiscountCode
-        fields = ['id', 'code', 'percentage', "expire_date"]
+        fields = ['id', 'code', 'percentage', 'expire_date']
 
 class OrderItemSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(source='product.id')
@@ -28,7 +28,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'order_id', 'order_date', 'customer', "customer_name", 'carrier', 'order_status',
+            'id', 'order_id', 'order_date', 'customer', 'customer_name', 'carrier', 'order_status',
             'method', 'code', 'estimated_delivery_date', 'items',
             'subtotal', 'shipping', 'tax', 'total',
             'address', 'postal_code'
@@ -49,8 +49,8 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        items_data = self.initial_data.get('items')  # ← change here
-        validated_data.pop('items', None)  # ← prevent conflict
+        items_data = self.initial_data.get('items', [])
+        validated_data.pop('items', None)
         order = Order.objects.create(**validated_data)
         for item in items_data:
             product = Product.objects.get(id=item['id'])
@@ -58,7 +58,7 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         return order
 
     def update(self, instance, validated_data):
-        items_data = self.initial_data.get('items')  # ← same trick
+        items_data = self.initial_data.get('items', [])
         validated_data.pop('items', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -70,4 +70,3 @@ class CreateOrderSerializer(serializers.ModelSerializer):
                 product = Product.objects.get(id=item['id'])
                 OrderItem.objects.create(order=instance, product=product, quantity=item['quantity'])
         return instance
-

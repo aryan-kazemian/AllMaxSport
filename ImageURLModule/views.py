@@ -14,7 +14,6 @@ class ImageUploadView(APIView):
 
         for file in files:
             file_path = default_storage.save(f"images/{file.name}", file)
-            # Correctly construct the full URL
             full_url = request.build_absolute_uri(settings.MEDIA_URL + file_path)
             image_urls.append(full_url)
 
