@@ -11,7 +11,12 @@ venv/
 
 # IDEs
 .idea/
-.vscode/
+
+# Media
+Media/
+
+# Build files
+build/
 
 # OS files
 .DS_Store
