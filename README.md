@@ -2,6 +2,8 @@
 
 **AllMaxSport** is a Django-based e-commerce and support platform providing REST APIs for product, category, and ticket management. The project includes admin panel management, JWT authentication, filtering, searching, ordering, and comprehensive tests.
 
+Swagger (OpenAPI) documentation is integrated to allow easy testing and exploration of all APIs.
+
 ---
 
 ## Technologies & Packages Used
@@ -9,6 +11,7 @@
 - **Python 3.10+**
 - **Django 4.x / 5.x compatible**
 - **Django REST Framework (DRF)** – for building REST APIs
+- **drf-spectacular** – OpenAPI/Swagger schema generation
 - **Simple JWT** – JWT authentication for secure API access
 - **SQLite** – default database (PostgreSQL or MySQL supported)
 - **django-filters** – filtering support on APIs
@@ -79,24 +82,23 @@
 
 ---
 
-## Admin Panel
+## Swagger / API Documentation
 
-- Manage **Users**, **Products**, **Categories**, **Tickets**, and **Messages**
-- Ticket messages inline for easy tracking
-- Product listing supports search, filter, and ordering
-- Category management with dynamic creation and JSON-based features
+Swagger UI is available to explore all endpoints:
 
----
+- **OpenAPI schema**: `/api/schema/`
+- **Swagger UI**: `/api/docs/`
+- **ReDoc UI**: `/api/redoc/`
 
-## Tests
+> Install and configure `drf-spectacular` in your `settings.py`:
 
-- **UserModule**: registration, login, logout, current user API
-- **ProductModule**: CRUD, filtering, category handling, and permissions
-- **TicketModule**: ticket creation, message management, permissions
-- **Permissions**:
-  - `IsStaffUser` – ensures only staff access to create/update/delete products
-  - `IsOwnerOrStaff` – ensures users can manage only their tickets/messages
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
 
----
-
-This project provides a fully functional backend for an **e-commerce platform with integrated customer support** ready for frontend integration or further customization.
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'AllMaxSport API',
+    'DESCRIPTION': 'API documentation for AllMaxSport e-commerce & support platform',
+    'VERSION': '1.0.0',
+}
