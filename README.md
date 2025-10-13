@@ -4,6 +4,8 @@
 
 Swagger (OpenAPI) documentation is integrated to allow easy testing and exploration of all APIs.
 
+Docker is included for development, allowing the backend to run in a containerized environment with automatic migrations and persistent media storage.
+
 ---
 
 ## Technologies & Packages Used
@@ -15,6 +17,7 @@ Swagger (OpenAPI) documentation is integrated to allow easy testing and explorat
 - **Simple JWT** – JWT authentication for secure API access
 - **SQLite** – default database (PostgreSQL or MySQL supported)
 - **django-filters** – filtering support on APIs
+- **Docker & Docker Compose** – containerized development environment
 
 ---
 
@@ -89,8 +92,6 @@ Swagger UI is available to explore all endpoints:
 - **OpenAPI schema**: `/api/schema/`
 - **Swagger UI**: `/api/docs/`
 - **ReDoc UI**: `/api/redoc/`
-
-> Install and configure `drf-spectacular` in your `settings.py`:
 
 ```python
 REST_FRAMEWORK = {
