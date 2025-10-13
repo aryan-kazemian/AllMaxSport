@@ -1,0 +1,22 @@
+AllMaxSport WebApp Backend - Docker Instructions
+
+Prerequisites:
+- Install Docker and Docker Compose.
+
+Start backend:
+1. Open terminal in project root (where docker-compose.yml is).
+2. Run: docker-compose up --build
+3. Backend will start at http://127.0.0.1:8000 and migrations run automatically.
+
+Stop backend:
+- Press CTRL+C in the terminal or run: docker-compose down
+
+Media files:
+- Uploaded files are stored in a Docker volume and persist across restarts.
+
+Frontend:
+- React frontend can run separately on http://localhost:3000
+- Backend serves APIs at http://127.0.0.1:8000
+
+Update dependencies:
+- If requirements.txt changes, run: docker-compose build

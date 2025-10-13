@@ -1,6 +1,8 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
 *.sqlite3
 *.log
 
@@ -11,13 +13,27 @@ venv/
 
 # IDEs
 .idea/
+.vscode/
 
-# Media
+# Media files
 Media/
 
-# Build files
+# Static and build files
+staticfiles/
 build/
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Docker
+docker-compose.override.yml
+*.env
+.docker/
+
+# Node / frontend
+node_modules/
+
+# Coverage reports
+htmlcov/
+.coverage
