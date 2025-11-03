@@ -1,19 +1,22 @@
 from django.contrib import admin
 from .models import Category, Product
+from mptt.admin import DraggableMPTTAdmin
 
 @admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name')
-    search_fields = ('name',)
-    ordering = ('name',)
+class CategoryAdmin(DraggableMPTTAdmin):
+    mptt_indent_field = "name"
+    list_display = ('tree_actions', 'indented_title', 'id')
+    list_display_links = ('indented_title',)
+    fields = ('name', 'parent') 
+
+
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = (
-        'id', 'name', 'price', 'sale_price', 'stock', 'category',
-        'brand', 'product_type', 'status', 'sales', 'created_at', 'updated_at'
-    )
-    list_filter = ('status', 'category', 'brand', 'product_type', 'created_at')
-    search_fields = ('name', 'brand', 'product_type', 'category__name')
-    ordering = ('-created_at',)
-    readonly_fields = ('created_at', 'updated_at')
+    list_display = ('name', 'category', 'price', 'created_at', 'updated_at')
+    list_filter = ('category', 'created_at', 'updated_at')
+    search_fields = ('name', 'description')
+    ordering = ('name',)
+
+
+print("✅ ProductModule admin loaded")
