@@ -5,6 +5,7 @@ from django.db.models import Q
 from .models import Product, Category
 from .serializers import ProductSerializer, CategorySerializer
 from rest_framework.permissions import AllowAny
+from django.db import IntegrityError
 from UserModule.permissions import IsStaffUser
 
 class ProductCategoryAPIView(APIView):
@@ -80,3 +81,61 @@ class ProductCategoryAPIView(APIView):
             return Response({'message': 'Product deleted'}, status=status.HTTP_204_NO_CONTENT)
         except Product.DoesNotExist:
             return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class CategoryAPIView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'GET':
+            return [AllowAny()]
+        return [IsStaffUser()]
+
+    def get(self, request):
+        cat_id = request.query_params.get('id')
+        if cat_id:
+            try:
+                category = Category.objects.get(id=cat_id)
+                serializer = CategorySerializer(category)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Category.DoesNotExist:
+                return Response({'error': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+        categories = Category.objects.all()
+        serializer = CategorySerializer(categories, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = CategorySerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            except IntegrityError:
+                return Response({'error': 'Category with this name already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request):
+        cat_id = request.query_params.get('id')
+        if not cat_id:
+            return Response({'error': 'Category id required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            category = Category.objects.get(id=cat_id)
+        except Category.DoesNotExist:
+            return Response({'error': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = CategorySerializer(category, data=request.data, partial=True)
+        if serializer.is_valid():
+            try:
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except IntegrityError:
+                return Response({'error': 'Category with this name already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request):
+        cat_id = request.query_params.get('id')
+        if not cat_id:
+            return Response({'error': 'Category id required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            category = Category.objects.get(id=cat_id)
+            category.delete()
+            return Response({'message': 'Category deleted'}, status=status.HTTP_204_NO_CONTENT)
+        except Category.DoesNotExist:
+            return Response({'error': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
