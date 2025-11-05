@@ -98,19 +98,39 @@ class CategoryAPIView(APIView):
                 return Response(serializer.data, status=status.HTTP_200_OK)
             except Category.DoesNotExist:
                 return Response({'error': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
-        categories = Category.objects.all()
+        categories = Category.objects.filter(parent__isnull=True)
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
         serializer = CategorySerializer(data=request.data)
         if serializer.is_valid():
+            parent_id = request.data.get('parent')
+
+            if parent_id:
+                try:
+                    parent_category = Category.objects.get(id=parent_id)
+                    if parent_category.parent is not None:
+                        return Response(
+                            {"error": "Cannot create a child under another child category (max depth = 2)."},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                except Category.DoesNotExist:
+                    return Response(
+                        {"error": "Parent category not found."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
             try:
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             except IntegrityError:
-                return Response({'error': 'Category with this name already exists'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'error': 'Category with this name already exists'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     def patch(self, request):
         cat_id = request.query_params.get('id')

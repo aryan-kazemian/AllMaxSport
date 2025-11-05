@@ -1,38 +1,47 @@
 from rest_framework import serializers
 from .models import Product, Category
 
+
+class RecursiveCategorySerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    childs = serializers.SerializerMethodField()
+
+    def get_childs(self, obj):
+        children = obj.get_children()
+        if children.exists():
+            return RecursiveCategorySerializer(children, many=True).data
+        return []
+    
+
+
+
 class CategorySerializer(serializers.ModelSerializer):
-    name = serializers.CharField(validators=[])
-    parent = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    parent = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        required=False,
+        allow_null=True
+    )
+    childs = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Category
-        fields = ['id', 'name', 'parent']
+        fields = ['id', 'name', 'parent', 'childs']
 
-    def to_internal_value(self, data):
-        if 'parent' in data and isinstance(data['parent'], dict):
-            data['parent'] = data['parent'].get('name', None)
-        return super().to_internal_value(data)
+    def get_childs(self, obj):
+        children = obj.get_children()
+        if children.exists():
+            return CategorySerializer(children, many=True).data
+        return []
 
-    def create(self, validated_data):
-        parent_name = validated_data.pop('parent', None)
-        if parent_name:
-            try:
-                parent_obj = Category.objects.get(name=parent_name)
-                validated_data['parent'] = parent_obj
-            except Category.DoesNotExist:
-                validated_data['parent'] = None
-        return super().create(validated_data)
+    def validate_parent(self, value):
+        """Prevent adding a child under another child (max depth = 2)"""
+        if value and value.parent is not None:
+            raise serializers.ValidationError(
+                "Cannot create a child under another child category (max depth = 2)."
+            )
+        return value
 
-    def update(self, instance, validated_data):
-        parent_name = validated_data.pop('parent', None)
-        if parent_name:
-            try:
-                parent_obj = Category.objects.get(name=parent_name)
-                validated_data['parent'] = parent_obj
-            except Category.DoesNotExist:
-                validated_data['parent'] = None
-        return super().update(instance, validated_data)
 
 
 
