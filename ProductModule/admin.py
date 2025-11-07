@@ -17,6 +17,3 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ('category', 'created_at', 'updated_at')
     search_fields = ('name', 'description')
     ordering = ('name',)
-
-
-print("✅ ProductModule admin loaded")

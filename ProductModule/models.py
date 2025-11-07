@@ -9,6 +9,7 @@ STATUS_CHOICES = [
 
 class Category(MPTTModel):
     name = models.CharField(max_length=100)
+    description = models.CharField(max_length=300, null=True)
     parent = TreeForeignKey(
         'self', on_delete=models.CASCADE, null=True, blank=True, related_name='children'
     )
