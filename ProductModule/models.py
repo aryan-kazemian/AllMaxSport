@@ -13,6 +13,7 @@ class Category(MPTTModel):
     parent = TreeForeignKey(
         'self', on_delete=models.CASCADE, null=True, blank=True, related_name='children'
     )
+    image = models.JSONField(default=dict, blank=True, null=True)
 
     class MPTTMeta:
         order_insertion_by = ['name']
